@@ -101,8 +101,9 @@ def log_svr(x, y, cv):
     ])
     
     search_params = dict(
-        svr__C = np.logspace(-2, 2, 20),
-        svr__gamma = np.logspace(-2, 2, 20)
+        svr__C = np.logspace(-2, 2, 10),
+        svr__gamma = np.logspace(-2, 2, 10),
+        svr__epsilon = np.logspace(-2, 2, 10)
     )
     
     svr_search = GridSearchCV(svr_estimator, param_grid = search_params, cv = cv)
@@ -132,13 +133,23 @@ def log_svr(x, y, cv):
     plot.savefig(directory + "svr_gamma_score_cv_%d.png" % cv, bbox_inches="tight")
     plot.clf()
     
+    epsilon_values, epsilon_scores = extract_feature(svr_search.grid_scores_, "svr__epsilon")
+    plot.plot(epsilon_values, epsilon_scores, 'co-', lw = 2)
+    plot.xscale("log")
+    plot.xlabel("Epsilon")
+    plot.ylabel("Score")
+    plot.ylim([-1, 1])
+    plot.suptitle("Epsilon Comparison with %d-Fold Validation" % cv)
+    plot.savefig(directory + "svr_epsilon_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.clf()
+    
     log_learning_curve(svr_search.best_estimator_, x, y, cv, directory)
     
     print svr_search.best_score_, svr_search.best_estimator_.score(x, y)
     
     plot.plot(x, svr_search.best_estimator_.predict(x), 'g-', lw = 2)
     plot.plot(x, y, 'b-', lw = 2)
-    plot.savefig(directory + "poly_prediction_cv_%d.png" % cv, bbox_inches="tight")
+    plot.savefig(directory + "svr_prediction_cv_%d.png" % cv, bbox_inches="tight")
     plot.clf()
 
 def extract_feature(scores, feature):
