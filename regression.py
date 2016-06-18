@@ -7,6 +7,7 @@ Created on Thu Jun 16 22:44:27 2016
 
 import numpy as np
 from sklearn import linear_model
+from sklearn import svm
 from sklearn import preprocessing
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.grid_search import GridSearchCV
@@ -31,18 +32,23 @@ def main():
     cv_folds = 10
     
     linear_estimator = make_pipeline(preprocessing.StandardScaler(), linear_model.LinearRegression())
+    print "Linear Regression ..."
     log_learning_curve(linear_estimator, x, y, cv_folds, "logs/linear/")
+    print "Polynomial Regression ..."
     log_polynomial_features(x, y, cv_folds)
+    print "Support Vector Regression ..."
+    log_svr(x, y, cv_folds)
     
 def log_learning_curve(estimator, x, y, cv, path):
     train_sizes, train_scores, valid_scores = learning_curve(estimator, x, y, train_sizes = np.linspace(.5, 1, 10), cv = cv)
     
     plot.plot(train_sizes, train_scores.mean(axis=1), 'ro-', lw = 2, label = "training")
-    plot.plot(train_sizes, valid_scores.mean(axis=1), 'go-', lw=2, label = "validation")
+    plot.plot(train_sizes, valid_scores.mean(axis=1), 'go-', lw = 2, label = "validation")
     plot.xlabel("# of Training Samples")
     plot.ylabel("Score")
+    plot.ylim([-1, 1])
     plot.suptitle("Learning Curve with %d-Fold Validation" % cv)
-    plot.legend(bbox_to_anchor=(.99, .26), fancybox=True)
+    plot.legend(bbox_to_anchor=(.81, 1.08), fancybox=True, ncol = 2)
     directory = path
     if not os.path.isdir(directory):
         os.makedirs(directory)
@@ -60,21 +66,19 @@ def log_polynomial_features(x, y, cv):
     max_degree = 5    
     
     search_params = dict(
-        poly__degree = range(1, max_degree + 1),
+        poly__degree = range(2, max_degree + 1),
         linear__alpha = np.logspace(-3, 3, 12)
     )
     
     poly_search = GridSearchCV(polynomial_estimator, param_grid = search_params, cv = cv)
     poly_search.fit(x, y)    
     
-    degree_scores = []
-    for i in range(1, max_degree + 1):
-        degree_scores.append(max([score for score in poly_search.grid_scores_ if score.parameters["poly__degree"] == i], key = lambda score: score.mean_validation_score))
-    degrees = [score.parameters["poly__degree"] for score in degree_scores]
-    scores = [score.mean_validation_score for score in degree_scores]
+    degrees, scores = extract_feature(poly_search.grid_scores_, "poly__degree")
+    
     plot.plot(degrees, scores, 'bo-', lw = 2)
     plot.xlabel("Polynomial Degree")
     plot.ylabel("Score")
+    plot.ylim([-1, 1])
     plot.suptitle("Degree Comparison with %d-Fold Validation" % cv)
     directory = "logs/poly/"
     if not os.path.isdir(directory):
@@ -82,8 +86,80 @@ def log_polynomial_features(x, y, cv):
     
     plot.savefig(directory + "poly_score_cv_%d.png" % cv, bbox_inches="tight")
     plot.clf()
-    
     log_learning_curve(poly_search.best_estimator_, x, y, cv, directory)
+    
+    
+    plot.plot(x, poly_search.best_estimator_.predict(x), 'g-', lw = 2)
+    plot.plot(x, y, 'b-', lw = 2)
+    plot.savefig(directory + "poly_prediction_cv_%d.png" % cv, bbox_inches="tight")
+    plot.clf()
+    
+def log_svr(x, y, cv):
+    svr_estimator = Pipeline([
+        ("scale", preprocessing.StandardScaler()),
+        ("svr", svm.SVR(kernel = "rbf")),
+    ])
+    
+    search_params = dict(
+        svr__C = np.logspace(-2, 2, 20),
+        svr__gamma = np.logspace(-2, 2, 20)
+    )
+    
+    svr_search = GridSearchCV(svr_estimator, param_grid = search_params, cv = cv)
+    svr_search.fit(x, y)
+    
+    directory = "logs/svr/"
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+        
+    C_values, C_scores = extract_feature(svr_search.grid_scores_, "svr__C")
+    plot.plot(C_values, C_scores, 'ko-', lw = 2)
+    plot.xscale("log")
+    plot.xlabel("Error Parameter(C)")
+    plot.ylabel("Score")
+    plot.ylim([-1, 1])
+    plot.suptitle("C Parameter Comparison with %d-Fold Validation" % cv)
+    plot.savefig(directory + "svr_C_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.clf()
+
+    gamma_values, gamma_scores = extract_feature(svr_search.grid_scores_, "svr__gamma")
+    plot.plot(gamma_values, gamma_scores, 'co-', lw = 2)
+    plot.xscale("log")
+    plot.xlabel("Kernel Coefficient(gamma)")
+    plot.ylabel("Score")
+    plot.ylim([-1, 1])
+    plot.suptitle("Kernel Coefficient Comparison with %d-Fold Validation" % cv)
+    plot.savefig(directory + "svr_gamma_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.clf()
+    
+    log_learning_curve(svr_search.best_estimator_, x, y, cv, directory)
+    
+    print svr_search.best_score_, svr_search.best_estimator_.score(x, y)
+    
+    plot.plot(x, svr_search.best_estimator_.predict(x), 'g-', lw = 2)
+    plot.plot(x, y, 'b-', lw = 2)
+    plot.savefig(directory + "poly_prediction_cv_%d.png" % cv, bbox_inches="tight")
+    plot.clf()
+
+def extract_feature(scores, feature):
+    feature_values = set()
+    for score in scores:
+        if(not score.parameters[feature] in feature_values):
+            feature_values.add(score.parameters[feature])
+            
+    filtered_scores = []
+    for value in feature_values:
+        feature_scores = [score for score in scores if score.parameters[feature] == value]
+        filtered_scores.append(max(feature_scores, key = lambda score: score.mean_validation_score))
+        
+    filtered_scores.sort(key = lambda score: score.parameters[feature])        
+        
+    feature_list = [score.parameters[feature] for score in filtered_scores]
+    score_list = [score.mean_validation_score for score in filtered_scores]
+        
+    
+    
+    return feature_list, score_list
     
 if __name__ == "__main__":
     main()
