@@ -12,11 +12,13 @@ from sklearn import preprocessing
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.grid_search import GridSearchCV
 from sklearn.learning_curve import learning_curve
+from sklearn import cross_validation
 from matplotlib import pyplot as plot
 import os
 
 def main():
-    f = open("Data/simulium.csv")
+    data_name = "simulium_plus_elevation"
+    f = open("Data/" + data_name + ".csv")
     labels = f.readline().split(",")
     data = np.loadtxt(f, delimiter = ",")
     
@@ -29,15 +31,18 @@ def main():
     x_labels = labels[:-1]
     y_labels = labels[-1]
     
-    cv_folds = 10
+    cv = 5
     
+    regress(x, y, cv, "logs/" + data_name + "/cv-%d/" % cv)
+    
+def regress(x, y, cv, path):
     linear_estimator = make_pipeline(preprocessing.StandardScaler(), linear_model.LinearRegression())
     print "Linear Regression ..."
-    log_learning_curve(linear_estimator, x, y, cv_folds, "logs/linear/")
+    log_learning_curve(linear_estimator, x, y, cv, path + "linear/")
     print "Polynomial Regression ..."
-    log_polynomial_features(x, y, cv_folds)
+    log_polynomial_features(x, y, cv, path)
     print "Support Vector Regression ..."
-    log_svr(x, y, cv_folds)
+    log_svr(x, y, cv, path)
     
 def log_learning_curve(estimator, x, y, cv, path):
     train_sizes, train_scores, valid_scores = learning_curve(estimator, x, y, train_sizes = np.linspace(.5, 1, 10), cv = cv)
@@ -53,10 +58,10 @@ def log_learning_curve(estimator, x, y, cv, path):
     if not os.path.isdir(directory):
         os.makedirs(directory)
     
-    plot.savefig(directory + "learning_curve_cv_%d.png" % cv, bbox_inches="tight")
+    plot.savefig(directory + "learning_curve.png", bbox_inches="tight")
     plot.clf()
     
-def log_polynomial_features(x, y, cv):
+def log_polynomial_features(x, y, cv, path):
     polynomial_estimator = Pipeline([
         ("scale", preprocessing.StandardScaler()),
         ("poly", preprocessing.PolynomialFeatures()),
@@ -80,21 +85,16 @@ def log_polynomial_features(x, y, cv):
     plot.ylabel("Score")
     plot.ylim([-1, 1])
     plot.suptitle("Degree Comparison with %d-Fold Validation" % cv)
-    directory = "logs/poly/"
+    directory = path + "poly/"
     if not os.path.isdir(directory):
         os.makedirs(directory)
     
-    plot.savefig(directory + "poly_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.savefig(directory + "poly_score.png", bbox_inches="tight")
     plot.clf()
     log_learning_curve(poly_search.best_estimator_, x, y, cv, directory)
     
+def log_svr(x, y, cv, path):  
     
-    plot.plot(x, poly_search.best_estimator_.predict(x), 'g-', lw = 2)
-    plot.plot(x, y, 'b-', lw = 2)
-    plot.savefig(directory + "poly_prediction_cv_%d.png" % cv, bbox_inches="tight")
-    plot.clf()
-    
-def log_svr(x, y, cv):
     svr_estimator = Pipeline([
         ("scale", preprocessing.StandardScaler()),
         ("svr", svm.SVR(kernel = "rbf")),
@@ -107,9 +107,9 @@ def log_svr(x, y, cv):
     )
     
     svr_search = GridSearchCV(svr_estimator, param_grid = search_params, cv = cv)
-    svr_search.fit(x, y)
+    svr_search.fit(train_x, train_y)
     
-    directory = "logs/svr/"
+    directory = path + "svr/"
     if not os.path.isdir(directory):
         os.makedirs(directory)
         
@@ -120,7 +120,7 @@ def log_svr(x, y, cv):
     plot.ylabel("Score")
     plot.ylim([-1, 1])
     plot.suptitle("C Parameter Comparison with %d-Fold Validation" % cv)
-    plot.savefig(directory + "svr_C_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.savefig(directory + "svr_C_score.png", bbox_inches="tight")
     plot.clf()
 
     gamma_values, gamma_scores = extract_feature(svr_search.grid_scores_, "svr__gamma")
@@ -130,7 +130,7 @@ def log_svr(x, y, cv):
     plot.ylabel("Score")
     plot.ylim([-1, 1])
     plot.suptitle("Kernel Coefficient Comparison with %d-Fold Validation" % cv)
-    plot.savefig(directory + "svr_gamma_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.savefig(directory + "svr_gamma_score.png", bbox_inches="tight")
     plot.clf()
     
     epsilon_values, epsilon_scores = extract_feature(svr_search.grid_scores_, "svr__epsilon")
@@ -140,17 +140,12 @@ def log_svr(x, y, cv):
     plot.ylabel("Score")
     plot.ylim([-1, 1])
     plot.suptitle("Epsilon Comparison with %d-Fold Validation" % cv)
-    plot.savefig(directory + "svr_epsilon_score_cv_%d.png" % cv, bbox_inches="tight")
+    plot.savefig(directory + "svr_epsilon_score.png", bbox_inches="tight")
     plot.clf()
     
     log_learning_curve(svr_search.best_estimator_, x, y, cv, directory)
     
     print svr_search.best_score_, svr_search.best_estimator_.score(x, y)
-    
-    plot.plot(x, svr_search.best_estimator_.predict(x), 'g-', lw = 2)
-    plot.plot(x, y, 'b-', lw = 2)
-    plot.savefig(directory + "svr_prediction_cv_%d.png" % cv, bbox_inches="tight")
-    plot.clf()
 
 def extract_feature(scores, feature):
     feature_values = set()
