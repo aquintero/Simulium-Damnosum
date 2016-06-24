@@ -20,13 +20,14 @@ def main():
     out_size = (221, 221)
     n_rot = 10
     n_crop = 10
+    r = np.random.RandomState(666)
     
     files = glob.glob(input_dir + "*.png")
     n = len(files)
     
     values = np.loadtxt(input_dir + "values.csv", delimiter = ",")
     
-    folds = KFold(n, n_folds = cv)
+    folds = KFold(n, n_folds = cv, shuffle = True, random_state = r)
     fold = 0
     for train_idx, test_idx in folds:
         fold_dir = out_dir + "%d/" % fold
@@ -34,9 +35,9 @@ def main():
             train_dir = fold_dir + "train/%d/" % train_i
             train_file = files[train_i]
             rot = np.zeros(n_rot + 1)
-            rot[1:] = np.random.random(n_rot) * 360
+            rot[1:] = r.rand(n_rot) * 360
             crop = np.zeros(n_crop + 1)
-            crop[1:] = np.random.random(n_crop) * (resize[0] - out_size[0]) * (resize[1] - out_size[1])
+            crop[1:] = r.rand(n_crop) * (resize[0] - out_size[0]) * (resize[1] - out_size[1])
             
             im = cv2.imread(train_file)
             im = cv2.resize(im, resize_rot, interpolation = cv2.INTER_AREA)
