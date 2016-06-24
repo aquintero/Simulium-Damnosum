@@ -1,4 +1,6 @@
 *.png
 *.jpg
 *.pyc
-
+*.TIF
+*.csv
+*.txt
