@@ -13,8 +13,8 @@ import numpy as np
 from sklearn_theano.feature_extraction import OverfeatTransformer
 
 def main():
-    input_dir = "data/transform/1/"
-    output_dir = "data/overfeat/1/"
+    input_dir = "data/transform/06/"
+    output_dir = "data/overfeat/06/"
     tf = OverfeatTransformer(output_layers=[-3], large_network = True)
     
     im_dirs = os.listdir(input_dir)

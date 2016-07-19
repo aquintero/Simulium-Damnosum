@@ -11,13 +11,13 @@ import numpy as np
 import cv2
 
 def main():
-    input_dir = "data/gis/output/1/"
-    out_dir = "data/transform/1/"
+    input_dir = "data/gis/output/06/"
+    out_dir = "data/transform/06/"
     resize_rot = (364, 364)
     resize = (256, 256)
     out_size = (221, 221)
-    n_rot = 3
-    n_crop = 3
+    n_rot = 20
+    n_crop = 20
     
     im_files = glob.glob(input_dir + "*.png")
     values = np.loadtxt(input_dir + "values.csv", delimiter = ",")

@@ -7,14 +7,14 @@ Created on Wed Jun 22 18:59:57 2016
 
 import os
 import numpy as np
-from sklearn.svm import SVR
+from sklearn.svm import LinearSVR
 from sklearn.cross_validation import LabelKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import shuffle
 
 def main():
-    input_dir = "data/overfeat/1/"
-    out_dir = "data/model/"
+    input_dir = "data/overfeat/06/"
+    out_dir = "data/model/06/"
     cv = 5
     
     if not os.path.isdir(out_dir):
@@ -27,20 +27,26 @@ def main():
     for ft_i, ft_dir in enumerate(ft_dirs):
         in_dir = input_dir + ft_dir + "/"
         x_part = np.loadtxt(in_dir + "features.csv", delimiter = ",")
-        x.append(x_part)            
-        y_part = np.empty(x_part.shape[0], dtype = np.float)
-        y_part.fill(np.loadtxt(in_dir + "value.csv", delimiter = ","))
-        y.append(y_part)
+        x.append(x_part)
         
-        for i in range(x_part.shape[0]):
+        if len(x_part.shape) == 1:
+            y_part = np.loadtxt(in_dir + "value.csv", delimiter = ",")
+            y.append(y_part)
+            
             labels.append(ft_i)
+        else:
+            y_part = np.empty(x_part.shape[0], dtype = np.float)
+            y_part.fill(np.loadtxt(in_dir + "value.csv", delimiter = ","))
+            y.append(y_part)
+        
+            for i in range(x_part.shape[0]):
+                labels.append(ft_i)
     x = np.array(x)
     y = np.array(y)
-    
+    labels = np.array(labels)
+        
     x = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
     y = y.reshape(y.shape[0] * y.shape[1])
-    
-    
         
     x, y, labels = shuffle(x, y, labels, random_state = 666)
     
@@ -50,7 +56,7 @@ def main():
     np.savetxt(out_dir + "features.csv", features, delimiter = ",")    
     np.savetxt(out_dir + "feature_labels.csv", np.asarray(labels, dtype = np.int32), delimiter = ",")
     
-    estimator = SVR()
+    estimator = LinearSVR()
     
     scores = []
     train_scores = []
