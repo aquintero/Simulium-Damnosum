@@ -1,17 +1,21 @@
 import caffe
 import os
+import glob
+import numpy as np
 
 def main():
-    model_prototxt = "data/caffe/bvlc_alexnet.caffemodel"
-    model_trained = "data/caffe/deploy.prototxt"
-    layer_name = "fc6"
+    model_trained = "data/caffe/bvlc_googlenet.caffemodel"
+    model_prototxt = "data/caffe/deploy.prototxt"
+    layer_name = "pool5/7x7_s1"
     input_dir = "data/transform/06/"
-    output_dir = "data/overfeat/06/"
+    output_dir = "data/caffe/06/"
     
     caffe.set_mode_cpu()
     net = caffe.Classifier(model_prototxt,
                         model_trained,
-                        caffe.TEST)
+                        channel_swap=(2,1,0),
+                        raw_scale=255,
+                        image_dims=(256, 256))
     
     im_dirs = os.listdir(input_dir)
     
@@ -28,11 +32,12 @@ def main():
             features.append(net.blobs[layer_name].data[0].reshape(1,-1))
 
         features = np.array(features)
+        features = features.reshape(features.shape[1], features.shape[2])
         out_dir = output_dir + im_dir + "/"
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
             
-        np.savetxt(out_dir + "features.csv", features, delimiter = ",")
+        np.savetxt(out_dir + "features.csv", features, delimiter = ",", fmt="%.8f")
         
         value = np.loadtxt(in_dir + "value.csv", delimiter = ",")
         np.savetxt(out_dir + "value.csv", [value], delimiter = ",")
