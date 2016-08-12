@@ -18,7 +18,7 @@ gdal.UseExceptions()
 def main():
     data_dir = "data/sat/06/"
     out_dir = "data/sites/06/"
-    pixel_radius = 100
+    pixel_radius = 150
     
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)    
