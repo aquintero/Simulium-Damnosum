@@ -6,6 +6,7 @@ Created on Thu Jun 23 13:26:18 2016
 """
 
 import os
+import math
 import glob
 import gdal
 from gdalconst import GA_ReadOnly
@@ -13,12 +14,15 @@ import osr
 import numpy as np
 from scipy.misc import imsave
 
+import misc
+
 gdal.UseExceptions()
 
 def main():
-    data_dir = "data/sat/06/"
-    out_dir = "data/sites/06/"
-    pixel_radius = 150
+    resolution = misc.getResolution()
+    data_dir = "data/sat/%s/" % resolution
+    out_dir = "data/sites/%s/" % resolution
+    radius = .0005
     
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)    
@@ -41,21 +45,29 @@ def main():
     # create a transform object to convert between coordinate systems
     transform = osr.CoordinateTransformation(cs_latlong, cs)
     
+    coord = np.array(transform.TransformPoint(coordinates[0][0], coordinates[0][1]))
+    radius_coord = np.array(transform.TransformPoint(coordinates[0][0] + radius, coordinates[0][1]))
+
+    coord[0] = int((coord[0] - gt[0]) / gt[1]) #x pixel
+    radius_coord[0] = int((radius_coord[0] - gt[0]) / gt[1]) #x pixel
+
+    pixel_radius = int(math.ceil(radius_coord[0] - coord[0]))
+    
     pixels = []
     for band in range(1, 4):
         raster = tiff.GetRasterBand(band)
         raster_pixels = []
         for geo_coord in coordinates:
-            coord = transform.TransformPoint(geo_coord[0], geo_coord[1])
-            coord = np.array(coord)
+            coord = np.array(transform.TransformPoint(geo_coord[0], geo_coord[1]))
     
             coord[0] = int((coord[0] - gt[0]) / gt[1]) #x pixel
             coord[1] = int((coord[1] - gt[3]) / gt[5]) #y pixel
-    
-    
+            
             min_coord = (coord - [pixel_radius, pixel_radius, 0]).astype(np.int)
             dimensions = np.array([2 * pixel_radius, 2 * pixel_radius])
-            raster_pixels.append(raster.ReadAsArray(min_coord[0], min_coord[1], dimensions[0], dimensions[1]))        
+            img = raster.ReadAsArray(min_coord[0], min_coord[1], dimensions[0], dimensions[1])
+            raster_pixels.append(img) 
+        
             
         pixels.append(raster_pixels)        
  

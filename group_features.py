@@ -2,9 +2,12 @@ import os
 import numpy as np
 from sklearn.utils import shuffle
 
+import misc
+
 def main():
-    input_dir = "data/caffe/06/"
-    out_dir = "data/features/06/"
+    resolution = misc.getResolution()
+    input_dir = "data/caffe/%s/" % resolution
+    out_dir = "data/features/%s/" % resolution
     
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)   

@@ -3,12 +3,15 @@ import os
 import glob
 import numpy as np
 
+import misc
+
 def main():
+    resolution = misc.getResolution()
     model_trained = "data/caffe/bvlc_googlenet.caffemodel"
     model_prototxt = "data/caffe/deploy.prototxt"
     layer_name = "pool5/7x7_s1"
-    input_dir = "data/transform/06/"
-    output_dir = "data/caffe/06/"
+    input_dir = "data/transform/%s/" % resolution
+    output_dir = "data/caffe/%s/" % resolution
     
     caffe.set_mode_cpu()
     net = caffe.Classifier(model_prototxt,

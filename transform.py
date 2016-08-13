@@ -10,9 +10,12 @@ import os
 import numpy as np
 import cv2
 
+import misc
+
 def main():
-    input_dir = "data/sites/06/"
-    out_dir = "data/transform/06/"
+    resolution = misc.getResolution()
+    input_dir = "data/sites/%s/" % resolution
+    out_dir = "data/transform/%s/" % resolution
     resize_rot = (400, 400)
     resize = (280, 280)
     out_size = (227, 227)
