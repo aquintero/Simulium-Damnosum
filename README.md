@@ -18,7 +18,7 @@ Code for simulium damnosum models
 ###R
 * Create environment variable R_HOME and set it to the R folder in your Miniconda installation
 * Open the R shell and run `install.packages("caret")`
-* run `install.packages("kernlab")
+* run `install.packages("kernlab")`
 
 ###Build Caffe: https://github.com/BVLC/caffe/tree/windows
 * `git clone -b windows https://github.com/BVLC/caffe.git`
@@ -40,4 +40,5 @@ Code for simulium damnosum models
 * googlenet.py
 * group_features.py
 * svr.py
+
 ####svr.py displays a psuedo r squared score of the regression model
