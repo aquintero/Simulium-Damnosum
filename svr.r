@@ -1,4 +1,4 @@
-require(caret)
+library(caret)
 features <- read.csv(paste(feature_path, "features.csv", sep=""), header = FALSE)
 x <- features[,1:ncol(features) - 1]
 y <- features[,ncol(features)]
