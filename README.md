@@ -1,9 +1,7 @@
 ## Simulium-Damnosum
-```
 Code for simulium damnosum models
 
 ## Setup
-```
 ###Install Miniconda (for all users): http://conda.pydata.org/miniconda.html
 ###Install the following conda libraries
 * `conda install PIL`
@@ -30,7 +28,6 @@ Code for simulium damnosum models
 * From `models/bvlc_googlenet` copy `deploy.prototxt` and `bvlc_googlenet.caffemodel` to `Simulium-Damnosum/data/cafe`
 
 ##Usage
-```
 * Set the resolution in config.cfg
 * Put a .TIF file and a .csv file in `Simulium-Damnosum/data/sat/<resolution>`
 * The csv file needs 4 columns: ID/Longitude/Latitude/Dependent_Variable
