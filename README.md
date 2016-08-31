@@ -11,12 +11,15 @@ Code for simulium damnosum models
 * `conda install gdal`
 * `conda install -c menpo opencv=2.4.11`
 * `conda install -c r rpy2=2.8.2`
+
 ###Other Libraries
 * `pip install protobuf`
+
 ###R
 * Create environment variable R_HOME and set it to the R folder in your Miniconda installation
 * Open the R shell and run `install.packages("caret")`
 * run `install.packages("kernlab")
+
 ###Build Caffe: https://github.com/BVLC/caffe/tree/windows
 * `git clone -b windows https://github.com/BVLC/caffe.git`
 * Rename `windows/CommonSettings.props.example` to `CommonSettings.props`
@@ -28,15 +31,13 @@ Code for simulium damnosum models
 * From `models/bvlc_googlenet` copy `deploy.prototxt` and `bvlc_googlenet.caffemodel` to `Simulium-Damnosum/data/cafe`
 
 ##Usage
-* Set the resolution in config.cfg
-* Put a .TIF file and a .csv file in `Simulium-Damnosum/data/sat/<resolution>`
-* The csv file needs 4 columns: ID/Longitude/Latitude/Dependent_Variable
-
-* Run python files in order:
-- extract_images.py
-- transform.py
-- googlenet.py
-- group_features.py
-- svr.py
-
-* svr.py displays a psuedo r squared score of the regression model
+####Set the resolution in config.cfg
+####Put a .TIF file and a .csv file in `Simulium-Damnosum/data/sat/<resolution>`
+####The csv file needs 4 columns: ID/Longitude/Latitude/Dependent_Variable
+####Run python files in order:
+* extract_images.py
+* transform.py
+* googlenet.py
+* group_features.py
+* svr.py
+####svr.py displays a psuedo r squared score of the regression model
