@@ -1,1 +1,0 @@
-load("data/r/06/model.Rdata")
